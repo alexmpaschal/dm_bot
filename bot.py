@@ -129,9 +129,6 @@ setup(bot)
 
 @bot.listen("on_message")
 async def message_listener(message):
-    guild = message.guild
-    link = message.jump_url
-
     if message.author.bot is False:
         bot_message = await wait_for_func(message)
 
