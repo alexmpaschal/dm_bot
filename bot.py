@@ -1,9 +1,8 @@
 import sqlite3
 import datetime
-
+import sys
 
 import discord
-from discord import channel
 from discord.ext import commands
 
 TOKEN = "TOKEN"
@@ -11,7 +10,7 @@ GUILD = "GUILD"
 
 bot = commands.Bot(
     command_prefix=">",
-    activity=discord.Activity(type=discord.ActivityType.listening, name=">help"),
+    activity=discord.Activity(type=discord.ActivityType.listening, name=">help")
 )
 
 
@@ -46,7 +45,47 @@ class Help(commands.MinimalHelpCommand):
 bot.help_command = Help(command_attrs={"hidden": True})
 
 
-class DM_settings(commands.Cog):
+class List_Commands(commands.Cog):
+    def __init(self, bot):
+        self.bot = bot
+    
+    @commands.command()
+    async def list_commands(self, ctx):
+        """See a list of commands for the user."""
+        member = ctx.author
+
+        commands_string = await list_user_commands(ctx)
+
+        embed = discord.Embed(
+            title=f"{member.display_name}'s Commands",
+            description=f"{commands_string}",
+            color=0x000000
+        )
+
+        await ctx.send(embed=embed)
+
+
+async def list_user_commands(ctx):
+    member = ctx.author
+    user = member.id
+
+    commands_list = cursor.execute(
+        """SELECT command FROM user_commands WHERE discord_user = (?) AND enabled = (?)""", 
+        (user, 1),
+    ).fetchall()
+
+    commands_string = " "
+
+    for item in commands_list:
+        commands_string += item[0] + "\n"
+
+    if commands_string == " ":
+        commands_string = "You don't have any commands set."
+
+    return commands_string
+
+
+class DM_Settings(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -57,7 +96,7 @@ class DM_settings(commands.Cog):
         user = user.id
 
         find_command = cursor.execute(
-            f"""SELECT command, enabled FROM user_commands WHERE command = (?) AND discord_user = (?)""",
+            """SELECT command, enabled FROM user_commands WHERE command = (?) AND discord_user = (?)""",
             (command, user),
         ).fetchone()
 
@@ -121,7 +160,8 @@ async def toggle_off(ctx, user, command):
 
 
 def setup(bot):
-    bot.add_cog(DM_settings(bot))
+    bot.add_cog(List_Commands(bot))
+    bot.add_cog(DM_Settings(bot))
 
 
 setup(bot)
@@ -214,7 +254,7 @@ async def create_alert_embed(command, guild, message, value, link):
     embed = discord.Embed(
         title="Command Alert",
         description=f"You just used `{command[0]}` in {guild.name}",
-        color=0x0000,
+        color=0x000000,
     )
     embed.set_thumbnail(
         url="https://raw.githubusercontent.com/yaboiwierdal/dm_bot/main/images/circle-cropped(4).png"
