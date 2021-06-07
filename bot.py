@@ -61,8 +61,6 @@ class DM_settings(commands.Cog):
             (command, user),
         ).fetchone()
 
-        print(find_command[1])
-
         if find_command is not None:
             # check enabled value
             if find_command[1] == 1:
@@ -141,11 +139,11 @@ async def message_listener(message):
 
         if is_command is True:
             if bot_message.embeds:
-                if len([e for e in bot_message.embeds if e.type == "rich"]) == 0:
-                    embed = await dm_if_link(message, command, bot_message)
+                if not len([e for e in bot_message.embeds if e.type == "rich"]) == 0:
+                    embed = await dm_if_embed(message, command)
                     return await message.author.send(embed=embed)
 
-                embed = await dm_if_embed(message, command)
+                embed = await dm_if_link(message, command, bot_message)
                 return await message.author.send(embed=embed)
 
             embed = await dm_if_not_embed(message, command, bot_message)
@@ -180,21 +178,21 @@ async def is_user_command(message):
     return " ", False
 
 
-async def dm_if_link(message, command, bot_message):
-    guild = message.guild
-    link = message.jump_url
-    value = f"[{bot_message.content[0:80]}]({bot_message.content})"
-
-    embed = await create_alert_embed(command, guild, message, value, link)
-
-    return embed
-
-
 async def dm_if_embed(message, command):
     guild = message.guild
     link = message.jump_url
 
     value = "The bot sent an embed."
+    embed = await create_alert_embed(command, guild, message, value, link)
+
+    return embed
+
+
+async def dm_if_link(message, command, bot_message):
+    guild = message.guild
+    link = message.jump_url
+    value = f"[{bot_message.content[0:80]}]({bot_message.content})"
+
     embed = await create_alert_embed(command, guild, message, value, link)
 
     return embed
