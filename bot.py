@@ -1,6 +1,6 @@
 import sqlite3
 import datetime
-import sys
+import asyncio
 
 import discord
 from discord.ext import commands
@@ -159,9 +159,30 @@ async def toggle_off(ctx, user, command):
     return await ctx.send(f"Notifications for `{command}` toggled off.")
 
 
+class CommandErrorHandler(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        cog = ctx.cog
+        if cog:
+            if cog._get_overridden_method(cog.cog_command_error) is not None:
+                return
+
+        ignored = (commands.CommandNotFound, asyncio.exceptions.TimeoutError, )
+        error = getattr(error, 'original', error)
+
+
+
+        if isinstance(error, ignored):
+            return
+
+
 def setup(bot):
     bot.add_cog(List_Commands(bot))
     bot.add_cog(DM_Settings(bot))
+    bot.add_cog(CommandErrorHandler(bot))
 
 
 setup(bot)
@@ -190,10 +211,33 @@ async def message_listener(message):
 async def wait_for_func(message):
     channel = message.channel
 
-    def check(m):
+    def check_for_bot_message(m):
         return m.author.bot and m.channel == channel
 
-    msg = await bot.wait_for("message", check=check)
+    def check_for_user_message(m):
+        return not m.author.bot and m.channel == channel
+
+    done, pending = await asyncio.wait([
+        bot.wait_for("message", check=check_for_bot_message),
+        bot.wait_for("message", check=check_for_user_message)
+    ], return_when=asyncio.FIRST_COMPLETED)
+
+    stuff = done.pop().result()
+
+    print(stuff.content)
+
+    for future in done:
+        future.exception()
+
+    for future in pending:
+        future.cancel()
+
+    return stuff
+
+
+
+
+    msg = await bot.wait_for("message", check=check_bot_message)
 
     return msg
 
