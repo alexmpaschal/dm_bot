@@ -179,6 +179,7 @@ async def is_user_command(message):
     for command in user_commands:
         if message_start == command[0]:
             return command, True
+        
     return " ", False
 
 async def dm_if_link(message, command, bot_message):
