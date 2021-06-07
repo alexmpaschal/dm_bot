@@ -191,20 +191,20 @@ setup(bot)
 @bot.listen("on_message")
 async def message_listener(message):
     if message.author.bot is False:
-        bot_message = await wait_for_func(message)
+        next_message, author_is_bot = await wait_for_func(message)
 
         command, is_command = await is_user_command(message)
 
-        if is_command is True:
-            if bot_message.embeds:
-                if not len([e for e in bot_message.embeds if e.type == "rich"]) == 0:
+        if is_command is True and author_is_bot is True:
+            if next_message.embeds:
+                if not len([e for e in next_message.embeds if e.type == "rich"]) == 0:
                     embed = await dm_if_embed(message, command)
                     return await message.author.send(embed=embed)
 
-                embed = await dm_if_link(message, command, bot_message)
+                embed = await dm_if_link(message, command, next_message)
                 return await message.author.send(embed=embed)
 
-            embed = await dm_if_not_embed(message, command, bot_message)
+            embed = await dm_if_not_embed(message, command, next_message)
             return await message.author.send(embed=embed)
 
 
@@ -222,9 +222,9 @@ async def wait_for_func(message):
         bot.wait_for("message", check=check_for_user_message)
     ], return_when=asyncio.FIRST_COMPLETED)
 
-    stuff = done.pop().result()
+    next_message = done.pop().result()
 
-    print(stuff.content)
+    author_is_bot = next_message.author.bot
 
     for future in done:
         future.exception()
@@ -232,14 +232,7 @@ async def wait_for_func(message):
     for future in pending:
         future.cancel()
 
-    return stuff
-
-
-
-
-    msg = await bot.wait_for("message", check=check_bot_message)
-
-    return msg
+    return next_message, author_is_bot
 
 
 async def is_user_command(message):
