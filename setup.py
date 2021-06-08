@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
 
-TOKEN = "ODUwNTM1MjMxMzY2MTAzMDgy.YLrIqQ.rXvnOk_ZqlkgkIgGEArb6EOFi30"
-GUILD = "849417383042875443"
+TOKEN = "TOKEN"
+GUILD = "GUILD"
 
 bot = commands.Bot(
     command_prefix=">",
