@@ -193,7 +193,7 @@ async def message_listener(message):
 
         command, is_command = await is_user_command(message)
 
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
 
         if is_command is True and next_message is not None:
             if next_message.embeds:
