@@ -1,8 +1,10 @@
+import os
+
 import discord
 from discord.ext import commands
 
-TOKEN = "TOKEN"
-GUILD = "GUILD"
+TOKEN = os.environ['TOKEN']
+GUILD = os.environ['GUILD']
 
 bot = commands.Bot(
     command_prefix=">",
