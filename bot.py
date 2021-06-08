@@ -1,20 +1,22 @@
 import sqlite3
 import datetime
 import asyncio
+import os
 
 import discord
 from discord.ext import commands
 
-TOKEN = "TOKEN"
-GUILD = "GUILD"
+TOKEN = os.environ["TOKEN"]
+GUILD = os.environ["GUILD"]
 
 bot = commands.Bot(
     command_prefix=">",
-    activity=discord.Activity(type=discord.ActivityType.listening, name=">help")
+    activity=discord.Activity(type=discord.ActivityType.listening, name=">help"),
 )
 
 
-connection = sqlite3.connect("C:\\Users\\alexp\\Dm Bot\\dm_bot.db")
+connection = sqlite3.connect("dm_bot.db")
+
 
 cursor = connection.cursor()
 
@@ -48,7 +50,7 @@ bot.help_command = Help(command_attrs={"hidden": True})
 class List_Commands(commands.Cog):
     def __init(self, bot):
         self.bot = bot
-    
+
     @commands.command()
     async def list_commands(self, ctx):
         """See a list of commands for the user."""
@@ -59,7 +61,7 @@ class List_Commands(commands.Cog):
         embed = discord.Embed(
             title=f"{member.display_name}'s Commands",
             description=f"{commands_string}",
-            color=0x000000
+            color=0x000000,
         )
 
         await ctx.send(embed=embed)
@@ -70,7 +72,7 @@ async def list_user_commands(ctx):
     user = member.id
 
     commands_list = cursor.execute(
-        """SELECT command FROM user_commands WHERE discord_user = (?) AND enabled = (?)""", 
+        """SELECT command FROM user_commands WHERE discord_user = (?) AND enabled = (?)""",
         (user, 1),
     ).fetchall()
 
@@ -170,8 +172,8 @@ class CommandErrorHandler(commands.Cog):
             if cog._get_overridden_method(cog.cog_command_error) is not None:
                 return
 
-        ignored = (commands.CommandNotFound, )
-        error = getattr(error, 'original', error)
+        ignored = (commands.CommandNotFound,)
+        error = getattr(error, "original", error)
 
         if isinstance(error, ignored):
             return
@@ -217,10 +219,13 @@ async def wait_for_func(message):
     def check_for_user_message(m):
         return not m.author.bot and m.channel == channel
 
-    done, pending = await asyncio.wait([
-        bot.wait_for("message", check=check_for_bot_message),
-        bot.wait_for("message", check=check_for_user_message)
-    ], return_when=asyncio.FIRST_COMPLETED)
+    done, pending = await asyncio.wait(
+        [
+            bot.wait_for("message", check=check_for_bot_message),
+            bot.wait_for("message", check=check_for_user_message),
+        ],
+        return_when=asyncio.FIRST_COMPLETED,
+    )
 
     next_message = done.pop().result()
 
