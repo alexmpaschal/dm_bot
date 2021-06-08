@@ -170,10 +170,8 @@ class CommandErrorHandler(commands.Cog):
             if cog._get_overridden_method(cog.cog_command_error) is not None:
                 return
 
-        ignored = (commands.CommandNotFound, asyncio.exceptions.TimeoutError, )
+        ignored = (commands.CommandNotFound, )
         error = getattr(error, 'original', error)
-
-
 
         if isinstance(error, ignored):
             return
@@ -191,11 +189,13 @@ setup(bot)
 @bot.listen("on_message")
 async def message_listener(message):
     if message.author.bot is False:
-        next_message, author_is_bot = await wait_for_func(message)
+        next_message = await wait_for_func(message)
+
+        print(next_message.embeds)
 
         command, is_command = await is_user_command(message)
 
-        if is_command is True and author_is_bot is True:
+        if is_command is True and next_message is not None:
             if next_message.embeds:
                 if not len([e for e in next_message.embeds if e.type == "rich"]) == 0:
                     embed = await dm_if_embed(message, command)
@@ -224,15 +224,16 @@ async def wait_for_func(message):
 
     next_message = done.pop().result()
 
-    author_is_bot = next_message.author.bot
-
     for future in done:
         future.exception()
 
     for future in pending:
         future.cancel()
 
-    return next_message, author_is_bot
+    if next_message.author.bot is True:
+        return next_message
+        
+    return None
 
 
 async def is_user_command(message):
