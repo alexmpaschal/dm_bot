@@ -191,13 +191,13 @@ async def message_listener(message):
     if message.author.bot is False:
         next_message = await wait_for_func(message)
 
-        print(next_message.embeds)
-
         command, is_command = await is_user_command(message)
+
+        await asyncio.sleep(1)
 
         if is_command is True and next_message is not None:
             if next_message.embeds:
-                if not len([e for e in next_message.embeds if e.type == "rich"]) == 0:
+                if any([e.type == "rich" for e in next_message.embeds]):
                     embed = await dm_if_embed(message, command)
                     return await message.author.send(embed=embed)
 
@@ -232,7 +232,7 @@ async def wait_for_func(message):
 
     if next_message.author.bot is True:
         return next_message
-        
+
     return None
 
 
@@ -266,7 +266,8 @@ async def dm_if_embed(message, command):
 async def dm_if_link(message, command, bot_message):
     guild = message.guild
     link = message.jump_url
-    value = f"[{bot_message.content[0:80]}]({bot_message.content})"
+    link_name = bot_message.content[0:80] + "..."
+    value = f"[{link_name}]({bot_message.content})"
 
     embed = await create_alert_embed(command, guild, message, value, link)
 
